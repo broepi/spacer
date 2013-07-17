@@ -1,0 +1,4 @@
+
+sources = src/*.cpp
+
+all: 

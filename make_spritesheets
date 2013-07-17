@@ -1,0 +1,3 @@
+#!/bin/bash
+FRAMES=$(echo blender/rendered/spaceship/*.png | sort)
+montage -tile 8x8 -geometry 64x64+0+0 -background transparent $FRAMES res/spaceship.png
