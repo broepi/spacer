@@ -19,3 +19,7 @@ clean:
 	rm obj/*.o
 	rm bin/spacer
 
+test : bin/test
+
+bin/test : test/test.cpp
+	$(CC) -o bin/test test/test.cpp

@@ -1,14 +1,24 @@
 
-class Drawable;
-class Game;
-class Display;
-class Starfield;
-class Star;
-class PlayerShip;
+#ifndef SPACER_H
+#define SPACER_H
 
-class Drawable
+#include "graphics.h"
+
+class PlayerShip : public Sprite
 {
-	virtual void draw (Display *display) {};
+private:
+	double velx, vely;
+	double angle;
+	int mode; // 0 = FLOATING ; 1 = ACCELERATING
+	int turnmode; // 0 = STILL ; 1 = LEFT ; 2 = RIGHT
+public:
+	PlayerShip (Display *display);
+	void advance ();
+	void start_accelerate ();
+	void start_float ();
+	void start_turn_left ();
+	void start_turn_right ();
+	void stop_turning ();
 };
 
 class Game
@@ -16,6 +26,7 @@ class Game
 private:
 	bool running;
 	Display *display;
+	Camera *cam;
 	Starfield *starfield;
 	PlayerShip *playership;
 public:
@@ -24,50 +35,4 @@ public:
 	void run ();
 };
 
-class Display
-{
-public:
-	int width, height;
-	SDL_Window *window;
-	SDL_Renderer *renderer;
-public:
-	Display ();
-	~Display ();
-};
-
-class Starfield : public Drawable
-{
-private:
-	int numstars;
-	int width, height;
-	Star **stars;
-public:
-	Starfield ();
-	void draw (Display *display, int x, int y);
-private:
-	void draw_star (Display *display, int x, int y, float fb);
-};
-
-class Star
-{
-public:
-	int x, y;
-	float brightness;
-	Star (int x, int y, float b);
-};
-
-class PlayerShip : public Drawable
-{
-private:
-	int x, y;
-	int vel;
-	float velx, vely;
-	float angle;
-public:
-	PlayerShip ();
-	void advance ();
-	void accelerate ();
-	void turn_left ();
-	void turn_right ();
-};
-
+#endif
