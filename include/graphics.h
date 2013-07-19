@@ -3,6 +3,8 @@
 #define GRAPHICS_H
 
 double modulo (double x, int y);
+double fmodulo (double x, double y);
+double radtodeg (double r);
 
 class Display
 {
@@ -33,7 +35,8 @@ public:
 	SDL_Texture *tex;
 public:
 	Image (Display *display, char *filename, bool texture, int cols, int rows);
-	void draw (Display *display, int x, int y, int frame);
+	Image ();
+	void draw (Display *, int, int, int = 0, int = 0, int = 1, double = 0.0, double = 1.0);
 };
 
 class Camera
@@ -47,22 +50,17 @@ public:
 
 class Sprite : public Drawable
 {
-protected:
+public:
 	double x, y;
-	int w, h;
+	double w, h;
 	int cx, cy;
+	double graphangle;
+	double alpha;
 	Image *img;
 	int frame;
 	Camera *cam;
-public:
+
 	Sprite (Image *img);
-	double get_x ();
-	double get_y ();
-	int get_w ();
-	int get_h ();
-	void set_pos (double x, double y);
-	void set_frame (int frame);
-	void set_cam (Camera *cam);
 	void draw (Display *display);
 };
 
@@ -76,19 +74,26 @@ public:
 
 class Starfield : public Drawable
 {
-private:
+public:
 	int numstars;
 	int width, height;
 	int x, y;
 	Camera *cam;
 	Star **stars;
-public:
+
 	Starfield ();
 	void draw (Display *display);
-	void set_pos (int x, int y);
-	void set_cam (Camera *cam);
 private:
 	void draw_star (Display *display, int x, int y, float fb);
+};
+
+class Font
+{
+private:
+	TTF_Font *font;
+public:
+	Font (char *filename, int ptsize);
+	Image *create_text (Display *display, char *text, unsigned int fgcol);
 };
 
 #endif

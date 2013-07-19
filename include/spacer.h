@@ -6,7 +6,7 @@
 
 class PlayerShip : public Sprite
 {
-private:
+public:
 	double velx, vely;
 	double angle;
 	int mode; // 0 = FLOATING ; 1 = ACCELERATING
@@ -21,14 +21,25 @@ public:
 	void stop_turning ();
 };
 
+class Cloud : public Sprite
+{
+public:
+	double velx, vely;
+
+	Cloud (Display *display);
+	void advance ();
+};
+
 class Game
 {
 private:
 	bool running;
 	Display *display;
+	Font *spacerfont;
 	Camera *cam;
 	Starfield *starfield;
 	PlayerShip *playership;
+	BPList<Cloud> clouds;
 public:
 	Game ();
 	~Game ();

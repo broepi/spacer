@@ -1,7 +1,7 @@
 
 #include "includes.h"
 
-#define PI 3.14159265359
+Image *cloudimage = 0;
 
 int main ()
 {
@@ -32,11 +32,12 @@ Game::Game ()
 	}
 	
 	display = new Display ();
+	spacerfont = new Font ("res/upheavtt.ttf", 40);
 	cam = new Camera ();
 	starfield = new Starfield ();
 	playership = new PlayerShip (display);
-	starfield->set_cam (cam);
-	playership->set_cam (cam);
+	starfield->cam = cam;
+	playership->cam = cam;
 	cam->cx = display->width/2;
 	cam->cy = display->height/2;
 }
@@ -101,12 +102,33 @@ void Game::run ()
 		}
 		int curtick = SDL_GetTicks ();
 		if (curtick-lasttick >= 16) {
+			if (playership->mode == 1) {
+				Cloud *newcloud = new Cloud (display);
+				newcloud->x = playership->x; // + playership->cx;
+				newcloud->y = playership->y; // + playership->cy;
+				newcloud->cam = cam;
+				newcloud->velx = playership->velx - sin (playership->angle)*2;
+				newcloud->vely = playership->vely + cos (playership->angle)*2;
+				clouds.add (newcloud);
+			}
+			for (BPNode<Cloud> *c = clouds.first; c; c=c->next) {
+				c->data->advance ();
+				// TODO: filter out finished clouds
+			}
 			playership->advance ();
-			cam->x = playership->get_x ();
-			cam->y = playership->get_y ();
+			cam->x = playership->x;
+			cam->y = playership->y;
 			display->clear ();
 			starfield->draw (display);
+			for (BPNode<Cloud> *c = clouds.first; c; c=c->next) {
+				c->data->draw (display);
+			}
 			playership->draw (display);
+			
+			Image *txtimg = spacerfont->create_text (
+				display,"Hello World : 0123456789", 0xff00ff00);
+			txtimg->draw (display,0,0);
+			
 			display->present ();
 			lasttick = SDL_GetTicks ();
 		}
@@ -134,6 +156,7 @@ void PlayerShip::advance ()
 		angle += (2*PI)/32 * 0.5;
 	}
 	frame = modulo ( floor ((angle / (2*PI)) * 32), 32);
+	graphangle = angle - frame*2*PI/32;
 	if (mode == 1) {
 		frame += 32;
 		float dx = sin (angle);
@@ -169,4 +192,33 @@ void PlayerShip::stop_turning ()
 {
 	turnmode = 0;
 }
+
+Cloud::Cloud (Display *display) :
+	Sprite (
+		cloudimage == 0 ?
+			(cloudimage = new Image (display, "res/cloud.png", true, 1, 1))
+			: cloudimage
+	)
+{
+	w /= 8;
+	h /= 8;
+	cx = w/2;
+	cy = h/2;
+	velx = 0;
+	vely = 0;
+}
+
+void Cloud::advance ()
+{
+	alpha -= 0.005;
+	if (alpha < 0) alpha = 0;
+	w += 0.5;
+	h += 0.5;
+	cx = w/2;
+	cy = h/2;
+	
+	x += velx;
+	y += vely;
+}
+
 
