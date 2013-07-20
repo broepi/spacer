@@ -104,16 +104,25 @@ void Game::run ()
 		if (curtick-lasttick >= 16) {
 			if (playership->mode == 1) {
 				Cloud *newcloud = new Cloud (display);
-				newcloud->x = playership->x; // + playership->cx;
-				newcloud->y = playership->y; // + playership->cy;
+				newcloud->x = playership->x - sin (playership->angle) * 20;
+				newcloud->y = playership->y + cos (playership->angle) * 20;
 				newcloud->cam = cam;
 				newcloud->velx = playership->velx - sin (playership->angle)*2;
 				newcloud->vely = playership->vely + cos (playership->angle)*2;
 				clouds.add (newcloud);
 			}
-			for (BPNode<Cloud> *c = clouds.first; c; c=c->next) {
-				c->data->advance ();
-				// TODO: filter out finished clouds
+			BPNode<Cloud> *node = clouds.first;
+			int i = 0;
+			while (node) {
+				node->data->advance ();
+				if (node->data->alpha == 0) {
+					BPNode<Cloud> *next = node->next;
+					clouds.del (i);
+					node = next;
+					continue;
+				}
+				node = node->next;
+				i++;
 			}
 			playership->advance ();
 			cam->x = playership->x;
@@ -125,8 +134,10 @@ void Game::run ()
 			}
 			playership->draw (display);
 			
+			char txtbuf [64];
+			sprintf (txtbuf, "Position: %d ; %d", (int)playership->x, (int)playership->y);
 			Image *txtimg = spacerfont->create_text (
-				display,"Hello World : 0123456789", 0xff00ff00);
+				display,txtbuf, 0xff00ff00);
 			txtimg->draw (display,0,0);
 			
 			display->present ();
@@ -143,18 +154,34 @@ PlayerShip::PlayerShip (Display *display) :
 	velx = 0.0;
 	vely = 0.0;
 	angle = 0.0; // 0.0 means looking along negative y-axis, walking clockwise
+	rotation = 0.0;
 	mode = 0;
 	turnmode = 0;
 }
 
 void PlayerShip::advance ()
 {
+	double turnfac = 0.04;
 	if (turnmode == 1) {
-		angle -= (2*PI)/32 * 0.5;
+		rotation -= (2*PI)/32 * turnfac;
 	}
 	else if (turnmode == 2) {
-		angle += (2*PI)/32 * 0.5;
+		rotation += (2*PI)/32 * turnfac;
 	}
+	else if (turnmode == 0) {
+		if (rotation > 0) {
+			rotation -= (2*PI)/32 * turnfac;
+			if (rotation < 0)
+				rotation = 0;
+		}
+		else if (rotation < 0) {
+			rotation += (2*PI)/32 * turnfac;
+			if (rotation > 0)
+				rotation = 0;
+		}
+		//rotation *= 0.9;
+	}
+	angle += rotation;
 	frame = modulo ( floor ((angle / (2*PI)) * 32), 32);
 	graphangle = angle - frame*2*PI/32;
 	if (mode == 1) {

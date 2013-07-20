@@ -9,9 +9,10 @@ class PlayerShip : public Sprite
 public:
 	double velx, vely;
 	double angle;
+	double rotation;
 	int mode; // 0 = FLOATING ; 1 = ACCELERATING
 	int turnmode; // 0 = STILL ; 1 = LEFT ; 2 = RIGHT
-public:
+
 	PlayerShip (Display *display);
 	void advance ();
 	void start_accelerate ();

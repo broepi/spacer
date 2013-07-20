@@ -103,24 +103,34 @@ T *BPList<T>::get_data (int index)
 template <typename T>
 void BPList<T>::del (int index)
 {
-	BPNode<T> *delcand, *prev, *next;
-
-	prev = this->get (index-1);
-	if(!prev) return;
-	delcand = prev->next;
-	if(!delcand) return;
-	next = delcand->next;
-
-	if(delcand->data) delete[] delcand->data;
-	delete delcand;
-	prev->next = next;
+	BPNode<T> *node, *prev, *next;
+	
+	if (index==0) {
+		if (!first) return;
+		next = first->next;
+		if (first->data)
+			delete first->data;
+		delete first;
+		first = next;
+	}
+	else if (index > 0) {
+		prev = this->get (index-1);
+		if (!prev) return;
+		node = prev->next;
+		if (!node) return;
+		next = node->next;
+		if (node->data)
+			delete node->data;
+		delete node;
+		prev->next = next;
+	}
 	count --;
 }
 
 template <typename T>
 void BPList<T>::del_all ()
 {
-	while( count )
-		del(count-1);
+	while (count)
+		del (0);
 }
 

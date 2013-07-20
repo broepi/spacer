@@ -36,7 +36,7 @@ public:
 public:
 	Image (Display *display, char *filename, bool texture, int cols, int rows);
 	Image ();
-	void draw (Display *, int, int, int = 0, int = 0, int = 1, double = 0.0, double = 1.0);
+	void draw (Display *, int, int, int = 0, int = 0, int = 0, double = 0.0, double = 1.0);
 };
 
 class Camera
