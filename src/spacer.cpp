@@ -1,14 +1,14 @@
 
 #include "includes.h"
 
-Image *cloudimage = 0;
-
 int main ()
 {
 	Game *game = new Game ();
 	game->run ();
 	delete game;
 }
+
+/**************************************************************************************************/
 
 Game::Game ()
 {
@@ -32,20 +32,23 @@ Game::Game ()
 	}
 	
 	display = new Display ();
+	spaceship_img = new Image (display, "res/spaceship.png", 8, 8);
+	cloud_img = new Image (display, "res/cloud.png");
+	spaceshiprot_img = new Image (display, "res/spaceship-rot.png");
 	spacerfont = new Font ("res/upheavtt.ttf", 40);
-	cam = new Camera ();
-	starfield = new Starfield ();
-	playership = new PlayerShip (display);
-	starfield->cam = cam;
-	playership->cam = cam;
-	cam->cx = display->width/2;
-	cam->cy = display->height/2;
+	cam = new Camera (display->w, display->h);
+	starfield = new Starfield (cam);
+	playership = new PlayerShip (spaceship_img, spaceshiprot_img, cam);
 }
 
 Game::~Game ()
 {
 	delete playership;
 	delete starfield;
+	delete cam;
+	delete spacerfont;
+	delete cloud_img;
+	delete spaceship_img;
 	delete display;
 	IMG_Quit ();
 	TTF_Quit ();
@@ -66,10 +69,9 @@ void Game::run ()
 				break;
 			case SDL_WINDOWEVENT:
 				if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
-					display->width = event.window.data1;
-					display->height = event.window.data2;
-					cam->cx = display->width/2;
-					cam->cy = display->height/2;
+					display->resize (event.window.data1, event.window.data2);
+					cam->w = display->w;
+					cam->h = display->h;
 				}
 				break;
 			case SDL_KEYDOWN:
@@ -102,13 +104,14 @@ void Game::run ()
 		}
 		int curtick = SDL_GetTicks ();
 		if (curtick-lasttick >= 16) {
-			if (playership->mode == 1) {
-				Cloud *newcloud = new Cloud (display);
-				newcloud->x = playership->x - sin (playership->angle) * 20;
-				newcloud->y = playership->y + cos (playership->angle) * 20;
-				newcloud->cam = cam;
-				newcloud->velx = playership->velx - sin (playership->angle)*2;
-				newcloud->vely = playership->vely + cos (playership->angle)*2;
+			lasttick = curtick;
+			/*
+			if (playership->movemode == 1) {
+				Cloud *newcloud = new Cloud (cloud_img, cam);
+				newcloud->x = playership->x - sind (playership->angle) * 20;
+				newcloud->y = playership->y + cosd (playership->angle) * 20;
+				newcloud->vx = playership->vx - sind (playership->angle) * 2;
+				newcloud->vy = playership->vy + cosd (playership->angle) * 2;
 				clouds.add (newcloud);
 			}
 			BPNode<Cloud> *node = clouds.first;
@@ -134,75 +137,126 @@ void Game::run ()
 			}
 			playership->draw (display);
 			
+			/*
 			char txtbuf [64];
 			sprintf (txtbuf, "Position: %d ; %d", (int)playership->x, (int)playership->y);
 			Image *txtimg = spacerfont->create_text (
 				display,txtbuf, 0xff00ff00);
 			txtimg->draw (display,0,0);
+			*/
 			
+			//
+			// ACTING
+			//
+			if (playership->movemode == 1) {
+				Cloud *newcloud = new Cloud (cloud_img, cam);
+				newcloud->x = playership->x - sind (playership->angle) * 20;
+				newcloud->y = playership->y + cosd (playership->angle) * 20;
+				newcloud->vx = playership->vx - sind (playership->angle) * 2;
+				newcloud->vy = playership->vy + cosd (playership->angle) * 2;
+				clouds.add (newcloud);
+			}
+			BPNode<Cloud> *node = clouds.first;
+			int i = 0;
+			while (node) {
+				node->data->advance ();
+				if (node->data->alpha == 0) {
+					BPNode<Cloud> *next = node->next;
+					clouds.del (i);
+					node = next;
+					continue;
+				}
+				node = node->next;
+				i++;
+			}
+			playership->advance ();
+			cam->x = playership->x;
+			cam->y = playership->y;
+			
+			
+			//
+			// DRAWING
+			//
+			display->clear ();
+			starfield->draw (display);
+			for (BPNode<Cloud> *c = clouds.first; c; c=c->next) {
+				c->data->draw (display);
+			}
+			playership->draw (display);
+			char txtbuf [64];
+			sprintf (txtbuf, "Position: %d ; %d", (int)playership->x, (int)playership->y);
+			Image *txtimg = spacerfont->create_text (
+				display,txtbuf, 0xff00ff00);
+			txtimg->draw (display,0,0);
+			delete txtimg;
 			display->present ();
-			lasttick = SDL_GetTicks ();
 		}
 	}
 }
 
-PlayerShip::PlayerShip (Display *display) : 
-	Sprite (new Image (display, "res/spaceship.png", true, 8, 8))
+/**************************************************************************************************/
+
+PlayerShip::PlayerShip (Image *img, Image *rotimg, Camera *cam) :
+	Mob (img, cam)
 {
-	x = 0;
-	y = 0;
-	velx = 0.0;
-	vely = 0.0;
-	angle = 0.0; // 0.0 means looking along negative y-axis, walking clockwise
+	this->rotimg = rotimg;
+	rotalpha = 0.0;
 	rotation = 0.0;
-	mode = 0;
+	movemode = 0;
 	turnmode = 0;
 }
 
 void PlayerShip::advance ()
 {
-	double turnfac = 0.04;
+	double turnfac = 11.25 * 0.04;
+	//	rotation -= (2*PI)/32 * turnfac;
 	if (turnmode == 1) {
-		rotation -= (2*PI)/32 * turnfac;
+		rotation -= turnfac;
 	}
 	else if (turnmode == 2) {
-		rotation += (2*PI)/32 * turnfac;
+		rotation += turnfac;
 	}
 	else if (turnmode == 0) {
 		if (rotation > 0) {
-			rotation -= (2*PI)/32 * turnfac;
+			rotation -= turnfac;
 			if (rotation < 0)
 				rotation = 0;
 		}
 		else if (rotation < 0) {
-			rotation += (2*PI)/32 * turnfac;
+			rotation += turnfac;
 			if (rotation > 0)
 				rotation = 0;
 		}
-		//rotation *= 0.9;
 	}
 	angle += rotation;
-	frame = modulo ( floor ((angle / (2*PI)) * 32), 32);
-	graphangle = angle - frame*2*PI/32;
-	if (mode == 1) {
+	frame = modulo ( floor (angle / 360 * 32), 32);
+	if (movemode == 1) {
 		frame += 32;
-		float dx = sin (angle);
-		float dy = -cos (angle);
-		velx += dx * 0.1;
-		vely += dy * 0.1;
+		vx += sind (angle) * 0.1;
+		vy += -cosd (angle) * 0.1;
 	}
-	x += velx;
-	y += vely;
+	alpha = 1.0 - max (0.0, min (0.75, (abs(rotation)-20) / 40));
+	rotalpha = 1.0 - alpha;
+	Mob::advance ();
+}
+
+void PlayerShip::draw (Display *display)
+{
+	double tmp = angle;
+	angle = angle - frame*11.25;
+	Mob::draw (display);
+	angle = tmp;
+	rotimg->draw (display, get_screen_x (), get_screen_y (), sx, sy, 0, 0, rotalpha);
 }
 
 void PlayerShip::start_accelerate ()
 {
-	mode = 1;
+	movemode = 1;
 }
 
 void PlayerShip::start_float ()
 {
-	mode = 0;
+	movemode = 0;
 }
 
 void PlayerShip::start_turn_left ()
@@ -220,32 +274,22 @@ void PlayerShip::stop_turning ()
 	turnmode = 0;
 }
 
-Cloud::Cloud (Display *display) :
-	Sprite (
-		cloudimage == 0 ?
-			(cloudimage = new Image (display, "res/cloud.png", true, 1, 1))
-			: cloudimage
-	)
+/**************************************************************************************************/
+
+Cloud::Cloud (Image *img, Camera *cam) :
+	Mob (img, cam)
 {
-	w /= 8;
-	h /= 8;
-	cx = w/2;
-	cy = h/2;
-	velx = 0;
-	vely = 0;
+	sx = sy = 1.0/8.0;
+	cx = cy = 0.5;
 }
 
 void Cloud::advance ()
 {
-	alpha -= 0.005;
-	if (alpha < 0) alpha = 0;
-	w += 0.5;
-	h += 0.5;
-	cx = w/2;
-	cy = h/2;
+	alpha *= 0.975;
+	if (alpha < 0.01) alpha = 0;
+	sx += 0.01;
+	sy += 0.01;
 	
-	x += velx;
-	y += vely;
+	Mob::advance ();
 }
-
 

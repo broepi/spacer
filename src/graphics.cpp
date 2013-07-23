@@ -8,26 +8,34 @@ double modulo (double x, int y)
 	return (((ix%y)+y)%y) + f;
 }
 
-double fmodulo (double x, double y)
-{
-	int ix = floor (x);
-	double f = x - ix;
-	return fmod(fmod(ix,y)+y,y) + f;
-}
-
 double radtodeg (double r)
 {
-	return r * 360 / (2*PI);
+	return r * 360.0 / (2.0*PI);
 }
+
+double degtorad (double d)
+{
+	return d * (2.0*PI) / 360.0;
+}
+
+double sind (double d)
+{
+	return sin (degtorad (d));
+}
+
+double cosd (double d)
+{
+	return cos (degtorad (d));
+}
+
+/**************************************************************************************************/
 
 Display::Display ()
 {
-	width = 800;
-	height = 600;
+	w = 800;
+	h = 600;
 	
-	window = SDL_CreateWindow ("Spacer",
-		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-		width, height,
+	window = SDL_CreateWindow ("Spacer", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h,
 		SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE );
 	
 	if (window == 0) {
@@ -35,7 +43,8 @@ Display::Display ()
 		exit (-1);
 	}
 	
-	renderer = SDL_CreateRenderer (window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+	renderer = SDL_CreateRenderer (window, -1,
+		SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 	
 	if (renderer == 0) {
 		cerr << "SDL error: " << SDL_GetError () << endl;
@@ -60,144 +69,170 @@ void Display::present ()
 	SDL_RenderPresent (renderer);
 }
 
-Image::Image (Display *display, char *filename, bool texture = true, int cols = 1, int rows = 1)
+void Display::resize (int w, int h)
 {
-	this->texture = texture;
-	tex = 0;
-	surf = 0;
+	this->w = w;
+	this->h = h;
+}
+
+/**************************************************************************************************/
+
+Image::Image (Display *display, char *filename, int cols, int rows)
+{
 	this->cols = cols;
 	this->rows = rows;
-	if (texture) {
+	if (filename) {
 		tex = IMG_LoadTexture (display->renderer, filename);
-		SDL_QueryTexture (tex, 0, 0, &width, &height);
+		SDL_QueryTexture (tex, 0, 0, &w, &h);
 	}
 	else {
-		surf = IMG_Load (filename);
-		width = surf->w;
-		height = surf->h;
+		tex = 0;
+		w = h = 0;
 	}
+	fw = w / cols;
+	fh = h / rows;
 }
 
-Image::Image ()
+Image::~Image ()
 {
-	texture = false;
-	width = height = 0;
-	cols = rows = 1;
-	surf = 0;
-	tex = 0;
+	SDL_DestroyTexture (tex);
 }
 
-void Image::draw (Display *display, int x, int y, int w, int h, int frame, double angle, double alpha)
+void Image::draw (Display *display, int x, int y, double sx, double sy, int frame, double angle,
+	double alpha)
 {
-	if (w==0) w = width;
-	if (h==0) h = height;
-	if (texture) {
-		int framex = frame % cols;
-		int framey = frame / cols;
-		int stepx = width / cols;
-		int stepy = height / rows;
-		SDL_Rect srcrect = {stepx*framex, stepy*framey, stepx, stepy};
-		SDL_Rect dstrect = {x, y, w, h};
-		SDL_SetTextureAlphaMod (tex, alpha*255);
-		SDL_RenderCopyEx (display->renderer, tex, &srcrect, &dstrect, radtodeg(angle), 0, SDL_FLIP_NONE);
-	}
-	else {
-	}
+	int framex = frame % cols;
+	int framey = frame / cols;
+	SDL_Rect srcrect = {fw * framex, fh * framey, fw, fh};
+	SDL_Rect dstrect = {x, y, fw * sx, fh * sy};
+	SDL_SetTextureAlphaMod (tex, alpha * 255);
+	SDL_RenderCopyEx (display->renderer, tex, &srcrect, &dstrect, angle, 0,
+		SDL_FLIP_NONE);
 }
 
-Camera::Camera ()
-{
-	x = 0;
-	y = 0;
-	cx = 0;
-	cy = 0;
-}
+/**************************************************************************************************/
 
-Sprite::Sprite (Image *img)
+Camera::Camera (int w, int h)
 {
-	this->img = img;
 	x = 0.0;
 	y = 0.0;
-	w = img->width / img->cols;
-	h = img->height / img->rows;
-	cx = w/2;
-	cy = h/2;
-	frame = 0;
-	cam = 0;
-	graphangle = 0.0;
+	this->w = w;
+	this->h = h;
+}
+
+/**************************************************************************************************/
+
+Sprite::Sprite (Image *img, Camera *cam)
+{
+	this->img = img;
+	x = y = 0.0;
+	sx = sy = 1.0;
+	cx = 0.5;
+	cy = 0.5;
+	angle = 0.0;
 	alpha = 1.0;
+	frame = 0;
+	this->cam = cam;
 }
 
 void Sprite::draw (Display *display)
 {
-	double ex = x;
-	double ey = y;
-	if (cam != 0) {
-		ex -= cam->x;
-		ey -= cam->y;
-		ex += cam->cx;
-		ey += cam->cy;
+	img->draw (display, get_screen_x (), get_screen_y (), sx, sy, frame, angle, alpha);
+}
+
+int Sprite::get_screen_x ()
+{
+	double screen_x = x;
+	if (cam) {
+		screen_x -= cam->x;
+		screen_x += cam->w / 2;
 	}
-	ex -= cx;
-	ey -= cy;
-	img->draw (display, floor (ex), floor(ey), w, h, frame, graphangle, alpha);
+	screen_x -= cx * sx * img->fw;
+	return floor (screen_x);
 }
 
-Star::Star (int x, int y, float b)
+int Sprite::get_screen_y ()
 {
-	this->x = x;
-	this->y = y;
-	brightness = b;
+	double screen_y = y;
+	if (cam) {
+		screen_y -= cam->y;
+		screen_y += cam->h / 2;
+	}
+	screen_y -= cy * sy * img->fh;
+	return floor (screen_y);
 }
 
-Starfield::Starfield ()
+/**************************************************************************************************/
+
+Mob::Mob (Image *img, Camera *cam)
+	: Sprite (img, cam)
 {
-	width = 1024;
-	height = 1024;
-	x = 0;
-	y = 0;
-	numstars = 1024;
-	stars = new Star* [numstars];
+	vx = 0.0;
+	vy = 0.0;
+}
+
+void Mob::advance ()
+{
+	x += vx;
+	y += vy;
+}
+
+/**************************************************************************************************/
+
+Starfield::Starfield (Camera *cam, int w, int h, int numstars)
+{
+	this->cam = cam;
+	this->w = w;
+	this->h = h;
+	this->numstars = numstars;
+	stars = new Star [numstars];
 	for (int i=0; i<numstars; i++) {
-		stars [i] = new Star (rand() % width, rand() % height, rand() / float(RAND_MAX));
+		stars [i].x = rand() % w;
+		stars [i].y = rand() % h;
+		stars [i].b = rand() / float(RAND_MAX);
 	}
 }
 
 void Starfield::draw (Display *display)
 {
 	for (int i=0; i<numstars; i++) {
-		double nx = x, ny = y;
-		if (cam != 0) {
-			nx -= cam->x;
-			ny -= cam->y;
-		}
-		double sx = stars[i]->x + nx * stars[i]->brightness;
-		double sy = stars[i]->y + ny * stars[i]->brightness;
-		float b = stars[i]->brightness;
-		sx = modulo (sx, width);
-		sy = modulo (sy, height);
-		if (cam != 0) {
-			sx += cam->cx;
-			sy += cam->cy;
-		}
-		draw_star (display, sx, sy, b);
-		if (sx-width >= 0) {
-			draw_star (display, sx-width, sy, b);
-			if (sy-height >= 0) {
-				draw_star (display, sx-width, sy-height, b);
+		float b = stars[i].b;
+		if (cam) {
+			double x = modulo (-cam->x * stars[i].b + stars[i].x, w) + cam->w / 2;
+			double y = modulo (-cam->y * stars[i].b + stars[i].y, h) + cam->h / 2;
+			draw_star (display, floor (x), floor (y), b);
+			if (x-w >= 0) {
+				draw_star (display, x-w, y, b);
+				if (y-h >= 0) {
+					draw_star (display, x-w, y-h, b);
+				}
+			}
+			if (y-h >= 0) {
+				draw_star (display, x, y-h, b);
 			}
 		}
-		if (sy-height >= 0) {
-			draw_star (display, sx, sy-height, b);
+		else {
+			double x = stars[i].x;
+			double y = stars[i].y;
+			draw_star (display, floor (x), floor (y), b);
+			if (x+w < display->w) {
+				draw_star (display, x+w, y, b);
+				if (y+h < display->h) {
+					draw_star (display, x+w, y+h, b);
+				}
+			}
+			if (y+h < display->h) {
+				draw_star (display, x, y+h, b);
+			}
 		}
 	}
 }
 
-void Starfield::draw_star (Display *display, int x, int y, float fb)
+void Starfield::draw_star (Display *display, int x, int y, double b)
 {
-	int b = fb * 256;
-	SDL_SetRenderDrawColor (display->renderer, b, b, b, 255);
-	if (fb > 0.95) {
+	int ib = b * 255;
+	SDL_SetRenderDrawColor (display->renderer, ib, ib, ib, 255);
+	if (b > 0.95) {
 		SDL_Rect r = {x, y, 2, 2};
 		SDL_RenderFillRect (display->renderer, &r);
 	}
@@ -205,6 +240,8 @@ void Starfield::draw_star (Display *display, int x, int y, float fb)
 		SDL_RenderDrawPoint (display->renderer, x, y);
 	}
 }
+
+/**************************************************************************************************/
 
 Font::Font (char *filename, int ptsize)
 {
@@ -217,14 +254,14 @@ Font::Font (char *filename, int ptsize)
 
 Image *Font::create_text (Display *display, char *text, unsigned int fgcol)
 {
-	Image *res = new Image ();
+	Image *res = new Image (display);
 	SDL_Color *col = new SDL_Color;
 	*col = *(SDL_Color*)&fgcol;
-	res->surf = TTF_RenderText_Solid (font, text, *col);
-	res->tex = SDL_CreateTextureFromSurface (display->renderer, res->surf);
-	res->texture = true;
-	res->width = res->surf->w;
-	res->height = res->surf->h;
+	SDL_Surface *surf = TTF_RenderText_Solid (font, text, *col);
+	res->tex = SDL_CreateTextureFromSurface (display->renderer, surf);
+	res->fw = res->w = surf->w;
+	res->fh = res->h = surf->h;
+	SDL_FreeSurface (surf);
 	return res;
 }
 

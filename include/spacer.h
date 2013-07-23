@@ -4,16 +4,19 @@
 
 #include "graphics.h"
 
-class PlayerShip : public Sprite
+/**************************************************************************************************/
+
+class PlayerShip : public Mob
 {
 public:
-	double velx, vely;
-	double angle;
+	Image *rotimg;
+	double rotalpha;
 	double rotation;
-	int mode; // 0 = FLOATING ; 1 = ACCELERATING
+	int movemode; // 0 = FLOATING ; 1 = ACCELERATING
 	int turnmode; // 0 = STILL ; 1 = LEFT ; 2 = RIGHT
 
-	PlayerShip (Display *display);
+	PlayerShip (Image *img, Image *rotimg, Camera *cam = 0);
+	void draw (Display *display);
 	void advance ();
 	void start_accelerate ();
 	void start_float ();
@@ -22,29 +25,34 @@ public:
 	void stop_turning ();
 };
 
-class Cloud : public Sprite
+/**************************************************************************************************/
+
+class Cloud : public Mob
 {
 public:
-	double velx, vely;
-
-	Cloud (Display *display);
+	Cloud (Image *img, Camera *cam = 0);
 	void advance ();
 };
 
+/**************************************************************************************************/
+
 class Game
 {
-private:
+public:
 	bool running;
+	
 	Display *display;
+	Image *spaceship_img, *cloud_img, *spaceshiprot_img;
 	Font *spacerfont;
 	Camera *cam;
 	Starfield *starfield;
 	PlayerShip *playership;
 	BPList<Cloud> clouds;
-public:
+
 	Game ();
 	~Game ();
 	void run ();
 };
 
 #endif
+

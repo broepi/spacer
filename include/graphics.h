@@ -3,21 +3,28 @@
 #define GRAPHICS_H
 
 double modulo (double x, int y);
-double fmodulo (double x, double y);
 double radtodeg (double r);
+double degtorad (double d);
+double sind (double d);
+double cosd (double d);
+
+/**************************************************************************************************/
 
 class Display
 {
 public:
-	int width, height;
+	int w, h;
 	SDL_Window *window;
 	SDL_Renderer *renderer;
-public:
+
 	Display ();
 	~Display ();
 	void clear ();
 	void present ();
+	void resize (int w, int h);
 };
+
+/**************************************************************************************************/
 
 class Drawable
 {
@@ -25,75 +32,97 @@ public:
 	virtual void draw (Display *display) {};
 };
 
+/**************************************************************************************************/
+
 class Image
 {
 public:
-	bool texture;
-	int width, height;
+	int w, h;
 	int cols, rows;
-	SDL_Surface *surf;
+	int fw, fh;
 	SDL_Texture *tex;
-public:
-	Image (Display *display, char *filename, bool texture, int cols, int rows);
-	Image ();
-	void draw (Display *, int, int, int = 0, int = 0, int = 0, double = 0.0, double = 1.0);
+
+	Image (Display *display, char *filename = 0, int cols = 1, int rows = 1);
+	~Image ();
+	void draw (Display *, int x, int y, double sx = 1.0, double sy = 1.0, int frame = 0,
+		double angle = 0.0, double alpha = 1.0);
 };
+
+/**************************************************************************************************/
 
 class Camera
 {
 public:
-	double x, y;
-	double cx, cy;
-public:
-	Camera ();
+	double x, y; // midpoint
+	int w, h;
+
+	Camera (int w, int h);
 };
+
+/**************************************************************************************************/
 
 class Sprite : public Drawable
 {
 public:
 	double x, y;
-	double w, h;
-	int cx, cy;
-	double graphangle;
+	double sx, sy; // scaling 0..1
+	double cx, cy; // ranged 0..1
+	double angle; // 0.0 means looking along negative y-axis, walking clockwise
 	double alpha;
-	Image *img;
 	int frame;
+	Image *img;
 	Camera *cam;
 
-	Sprite (Image *img);
+	Sprite (Image *img, Camera *cam = 0);
 	void draw (Display *display);
+	int get_screen_x ();
+	int get_screen_y ();
 };
 
-class Star
+/**************************************************************************************************/
+
+class Mob : public Sprite
 {
 public:
-	int x, y;
-	float brightness;
-	Star (int x, int y, float b);
+	double vx, vy;
+	
+	Mob (Image *img, Camera *cam = 0);
+	void advance ();
 };
+
+/**************************************************************************************************/
+
+struct Star
+{
+	int x, y;
+	double b;
+};
+
+/**************************************************************************************************/
 
 class Starfield : public Drawable
 {
 public:
+	int w, h;
 	int numstars;
-	int width, height;
-	int x, y;
 	Camera *cam;
-	Star **stars;
+	Star *stars;
 
-	Starfield ();
+	Starfield (Camera *cam = 0, int w = 1024, int h = 1024, int numstars = 1024);
 	void draw (Display *display);
-private:
-	void draw_star (Display *display, int x, int y, float fb);
+	void draw_star (Display *display, int x, int y, double b);
 };
+
+/**************************************************************************************************/
 
 class Font
 {
-private:
-	TTF_Font *font;
 public:
+	TTF_Font *font;
+
 	Font (char *filename, int ptsize);
 	Image *create_text (Display *display, char *text, unsigned int fgcol);
 };
 
 #endif
+
