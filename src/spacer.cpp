@@ -32,13 +32,22 @@ Game::Game ()
 	}
 	
 	display = new Display ();
+	
 	spaceship_img = new Image (display, "res/spaceship.png", 8, 8);
 	cloud_img = new Image (display, "res/cloud.png");
-	spaceshiprot_img = new Image (display, "res/spaceship-rot.png");
+	spaceshiprot_img = new Image (display, "res/spaceship-hyperrotation.png");
+	spaceshiprot2_img = new Image (display, "res/spaceship-hyperrotation-2.png");
+	radar_img = new Image (display, "res/radar.png");
+	
 	spacerfont = new Font ("res/upheavtt.ttf", 40);
 	cam = new Camera (display->w, display->h);
 	starfield = new Starfield (cam);
-	playership = new PlayerShip (spaceship_img, spaceshiprot_img, cam);
+	radar = new Radar (radar_img);
+	radar->cx = 0;
+	radar->cy = 1;
+	radar->x = 10;
+	radar->y = display->h-10;
+	playership = new PlayerShip (spaceship_img, spaceshiprot_img, spaceshiprot2_img, cam);
 }
 
 Game::~Game ()
@@ -72,6 +81,7 @@ void Game::run ()
 					display->resize (event.window.data1, event.window.data2);
 					cam->w = display->w;
 					cam->h = display->h;
+					radar->y = display->h-10;
 				}
 				break;
 			case SDL_KEYDOWN:
@@ -105,46 +115,8 @@ void Game::run ()
 		int curtick = SDL_GetTicks ();
 		if (curtick-lasttick >= 16) {
 			lasttick = curtick;
-			/*
-			if (playership->movemode == 1) {
-				Cloud *newcloud = new Cloud (cloud_img, cam);
-				newcloud->x = playership->x - sind (playership->angle) * 20;
-				newcloud->y = playership->y + cosd (playership->angle) * 20;
-				newcloud->vx = playership->vx - sind (playership->angle) * 2;
-				newcloud->vy = playership->vy + cosd (playership->angle) * 2;
-				clouds.add (newcloud);
-			}
-			BPNode<Cloud> *node = clouds.first;
-			int i = 0;
-			while (node) {
-				node->data->advance ();
-				if (node->data->alpha == 0) {
-					BPNode<Cloud> *next = node->next;
-					clouds.del (i);
-					node = next;
-					continue;
-				}
-				node = node->next;
-				i++;
-			}
-			playership->advance ();
-			cam->x = playership->x;
-			cam->y = playership->y;
-			display->clear ();
-			starfield->draw (display);
-			for (BPNode<Cloud> *c = clouds.first; c; c=c->next) {
-				c->data->draw (display);
-			}
-			playership->draw (display);
 			
-			/*
-			char txtbuf [64];
-			sprintf (txtbuf, "Position: %d ; %d", (int)playership->x, (int)playership->y);
-			Image *txtimg = spacerfont->create_text (
-				display,txtbuf, 0xff00ff00);
-			txtimg->draw (display,0,0);
-			*/
-			
+						
 			//
 			// ACTING
 			//
@@ -189,6 +161,7 @@ void Game::run ()
 				display,txtbuf, 0xff00ff00);
 			txtimg->draw (display,0,0);
 			delete txtimg;
+			radar->draw (display);
 			display->present ();
 		}
 	}
@@ -196,10 +169,11 @@ void Game::run ()
 
 /**************************************************************************************************/
 
-PlayerShip::PlayerShip (Image *img, Image *rotimg, Camera *cam) :
+PlayerShip::PlayerShip (Image *img, Image *rotimg, Image *rotimg2, Camera *cam) :
 	Mob (img, cam)
 {
 	this->rotimg = rotimg;
+	this->rotimg2 = rotimg2;
 	rotalpha = 0.0;
 	rotation = 0.0;
 	movemode = 0;
@@ -209,7 +183,6 @@ PlayerShip::PlayerShip (Image *img, Image *rotimg, Camera *cam) :
 void PlayerShip::advance ()
 {
 	double turnfac = 11.25 * 0.04;
-	//	rotation -= (2*PI)/32 * turnfac;
 	if (turnmode == 1) {
 		rotation -= turnfac;
 	}
@@ -246,7 +219,10 @@ void PlayerShip::draw (Display *display)
 	angle = angle - frame*11.25;
 	Mob::draw (display);
 	angle = tmp;
-	rotimg->draw (display, get_screen_x (), get_screen_y (), sx, sy, 0, 0, rotalpha);
+	if (movemode == 1)
+		rotimg2->draw (display, get_screen_x (), get_screen_y (), sx, sy, 0, 0, rotalpha);
+	else
+		rotimg->draw (display, get_screen_x (), get_screen_y (), sx, sy, 0, 0, rotalpha);
 }
 
 void PlayerShip::start_accelerate ()
@@ -292,4 +268,12 @@ void Cloud::advance ()
 	
 	Mob::advance ();
 }
+
+/**************************************************************************************************/
+
+Radar::Radar (Image *img)
+	: Sprite (img)
+{
+}
+
 

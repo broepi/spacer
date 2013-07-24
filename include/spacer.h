@@ -10,12 +10,13 @@ class PlayerShip : public Mob
 {
 public:
 	Image *rotimg;
+	Image *rotimg2;
 	double rotalpha;
 	double rotation;
 	int movemode; // 0 = FLOATING ; 1 = ACCELERATING
 	int turnmode; // 0 = STILL ; 1 = LEFT ; 2 = RIGHT
 
-	PlayerShip (Image *img, Image *rotimg, Camera *cam = 0);
+	PlayerShip (Image *img, Image *rotimg, Image *rotimg2, Camera *cam = 0);
 	void draw (Display *display);
 	void advance ();
 	void start_accelerate ();
@@ -36,17 +37,26 @@ public:
 
 /**************************************************************************************************/
 
+class Radar : public Sprite
+{
+public:
+	Radar (Image *img);
+};
+
+/**************************************************************************************************/
+
 class Game
 {
 public:
 	bool running;
 	
 	Display *display;
-	Image *spaceship_img, *cloud_img, *spaceshiprot_img;
+	Image *spaceship_img, *cloud_img, *spaceshiprot_img, *spaceshiprot2_img, *radar_img;
 	Font *spacerfont;
 	Camera *cam;
 	Starfield *starfield;
 	PlayerShip *playership;
+	Radar *radar;
 	BPList<Cloud> clouds;
 
 	Game ();

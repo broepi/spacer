@@ -196,10 +196,10 @@ Starfield::Starfield (Camera *cam, int w, int h, int numstars)
 void Starfield::draw (Display *display)
 {
 	for (int i=0; i<numstars; i++) {
-		float b = stars[i].b;
+		double b = stars[i].b;
 		if (cam) {
-			double x = modulo (-cam->x * stars[i].b + stars[i].x, w) + cam->w / 2;
-			double y = modulo (-cam->y * stars[i].b + stars[i].y, h) + cam->h / 2;
+			double x = modulo (-cam->x * b * 0.1 + stars[i].x, w) + cam->w / 2;
+			double y = modulo (-cam->y * b * 0.1 + stars[i].y, h) + cam->h / 2;
 			draw_star (display, floor (x), floor (y), b);
 			if (x-w >= 0) {
 				draw_star (display, x-w, y, b);

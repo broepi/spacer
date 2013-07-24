@@ -16,8 +16,8 @@ obj/%.o : src/%.cpp
 	$(CC) -o $@ $(CPPFLAGS) -c $^
 
 clean:
-	rm obj/*.o
-	rm bin/spacer
+	-rm obj/*.o
+	-rm bin/spacer
 
 test : bin/test
 
