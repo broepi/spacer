@@ -75,14 +75,24 @@ void Display::resize (int w, int h)
 	this->h = h;
 }
 
+void Display::set_target (Image *img)
+{
+	if (img)
+		SDL_SetRenderTarget (renderer, img->tex);
+	else
+		SDL_SetRenderTarget (renderer, 0);
+}
+
 /**************************************************************************************************/
 
 Image::Image (Display *display, char *filename, int cols, int rows)
 {
+	this->display = display;
 	this->cols = cols;
 	this->rows = rows;
 	if (filename) {
 		tex = IMG_LoadTexture (display->renderer, filename);
+		SDL_SetTextureBlendMode (tex, SDL_BLENDMODE_BLEND);
 		SDL_QueryTexture (tex, 0, 0, &w, &h);
 	}
 	else {
@@ -93,12 +103,24 @@ Image::Image (Display *display, char *filename, int cols, int rows)
 	fh = h / rows;
 }
 
+Image::Image (Display *display, int width, int height)
+{
+	this->display = display;
+	cols = 1;
+	rows = 1;
+	fw = w = width;
+	fh = h = height;
+	tex = SDL_CreateTexture (display->renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET,
+		w, h);
+	SDL_SetTextureBlendMode (tex, SDL_BLENDMODE_BLEND);
+}
+
 Image::~Image ()
 {
 	SDL_DestroyTexture (tex);
 }
 
-void Image::draw (Display *display, int x, int y, double sx, double sy, int frame, double angle,
+void Image::draw (int x, int y, double sx, double sy, int frame, double angle,
 	double alpha)
 {
 	int framex = frame % cols;
@@ -135,9 +157,9 @@ Sprite::Sprite (Image *img, Camera *cam)
 	this->cam = cam;
 }
 
-void Sprite::draw (Display *display)
+void Sprite::draw ()
 {
-	img->draw (display, get_screen_x (), get_screen_y (), sx, sy, frame, angle, alpha);
+	img->draw (get_screen_x (), get_screen_y (), sx, sy, frame, angle, alpha);
 }
 
 int Sprite::get_screen_x ()
@@ -179,8 +201,9 @@ void Mob::advance ()
 
 /**************************************************************************************************/
 
-Starfield::Starfield (Camera *cam, int w, int h, int numstars)
+Starfield::Starfield (Display *display, Camera *cam, int w, int h, int numstars)
 {
+	this->display = display;
 	this->cam = cam;
 	this->w = w;
 	this->h = h;
@@ -193,42 +216,42 @@ Starfield::Starfield (Camera *cam, int w, int h, int numstars)
 	}
 }
 
-void Starfield::draw (Display *display)
+void Starfield::draw ()
 {
 	for (int i=0; i<numstars; i++) {
 		double b = stars[i].b;
 		if (cam) {
 			double x = modulo (-cam->x * b * 0.1 + stars[i].x, w) + cam->w / 2;
 			double y = modulo (-cam->y * b * 0.1 + stars[i].y, h) + cam->h / 2;
-			draw_star (display, floor (x), floor (y), b);
+			draw_star (floor (x), floor (y), b);
 			if (x-w >= 0) {
-				draw_star (display, x-w, y, b);
+				draw_star (x-w, y, b);
 				if (y-h >= 0) {
-					draw_star (display, x-w, y-h, b);
+					draw_star (x-w, y-h, b);
 				}
 			}
 			if (y-h >= 0) {
-				draw_star (display, x, y-h, b);
+				draw_star (x, y-h, b);
 			}
 		}
 		else {
 			double x = stars[i].x;
 			double y = stars[i].y;
-			draw_star (display, floor (x), floor (y), b);
+			draw_star (floor (x), floor (y), b);
 			if (x+w < display->w) {
-				draw_star (display, x+w, y, b);
+				draw_star (x+w, y, b);
 				if (y+h < display->h) {
-					draw_star (display, x+w, y+h, b);
+					draw_star (x+w, y+h, b);
 				}
 			}
 			if (y+h < display->h) {
-				draw_star (display, x, y+h, b);
+				draw_star (x, y+h, b);
 			}
 		}
 	}
 }
 
-void Starfield::draw_star (Display *display, int x, int y, double b)
+void Starfield::draw_star (int x, int y, double b)
 {
 	int ib = b * 255;
 	SDL_SetRenderDrawColor (display->renderer, ib, ib, ib, 255);

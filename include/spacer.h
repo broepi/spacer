@@ -17,7 +17,7 @@ public:
 	int turnmode; // 0 = STILL ; 1 = LEFT ; 2 = RIGHT
 
 	PlayerShip (Image *img, Image *rotimg, Image *rotimg2, Camera *cam = 0);
-	void draw (Display *display);
+	void draw ();
 	void advance ();
 	void start_accelerate ();
 	void start_float ();
@@ -40,7 +40,10 @@ public:
 class Radar : public Sprite
 {
 public:
+	Image *screen;
+	
 	Radar (Image *img);
+	void draw ();
 };
 
 /**************************************************************************************************/
@@ -58,6 +61,8 @@ public:
 	PlayerShip *playership;
 	Radar *radar;
 	BPList<Cloud> clouds;
+	SDL_Texture *test;
+	Image *circle_img;
 
 	Game ();
 	~Game ();

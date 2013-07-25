@@ -41,13 +41,17 @@ Game::Game ()
 	
 	spacerfont = new Font ("res/upheavtt.ttf", 40);
 	cam = new Camera (display->w, display->h);
-	starfield = new Starfield (cam);
+	starfield = new Starfield (display, cam);
 	radar = new Radar (radar_img);
 	radar->cx = 0;
 	radar->cy = 1;
 	radar->x = 10;
 	radar->y = display->h-10;
 	playership = new PlayerShip (spaceship_img, spaceshiprot_img, spaceshiprot2_img, cam);
+	
+	//test = SDL_CreateTexture (display->renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 200, 200);
+	//SDL_SetTextureBlendMode (test, SDL_BLENDMODE_BLEND);
+	//circle_img = new Image (display, "res/circle.png");
 }
 
 Game::~Game ()
@@ -150,18 +154,19 @@ void Game::run ()
 			// DRAWING
 			//
 			display->clear ();
-			starfield->draw (display);
+			starfield->draw ();
 			for (BPNode<Cloud> *c = clouds.first; c; c=c->next) {
-				c->data->draw (display);
+				c->data->draw ();
 			}
-			playership->draw (display);
+			playership->draw ();
 			char txtbuf [64];
 			sprintf (txtbuf, "Position: %d ; %d", (int)playership->x, (int)playership->y);
 			Image *txtimg = spacerfont->create_text (
 				display,txtbuf, 0xff00ff00);
-			txtimg->draw (display,0,0);
+			txtimg->draw (0,0);
 			delete txtimg;
-			radar->draw (display);
+			radar->draw ();
+			
 			display->present ();
 		}
 	}
@@ -213,16 +218,16 @@ void PlayerShip::advance ()
 	Mob::advance ();
 }
 
-void PlayerShip::draw (Display *display)
+void PlayerShip::draw ()
 {
 	double tmp = angle;
 	angle = angle - frame*11.25;
-	Mob::draw (display);
+	Mob::draw ();
 	angle = tmp;
 	if (movemode == 1)
-		rotimg2->draw (display, get_screen_x (), get_screen_y (), sx, sy, 0, 0, rotalpha);
+		rotimg2->draw (get_screen_x (), get_screen_y (), sx, sy, 0, 0, rotalpha);
 	else
-		rotimg->draw (display, get_screen_x (), get_screen_y (), sx, sy, 0, 0, rotalpha);
+		rotimg->draw (get_screen_x (), get_screen_y (), sx, sy, 0, 0, rotalpha);
 }
 
 void PlayerShip::start_accelerate ()
@@ -274,6 +279,11 @@ void Cloud::advance ()
 Radar::Radar (Image *img)
 	: Sprite (img)
 {
+	screen = new Image (img->display, img->fw, img->fw);
 }
 
+void Radar::draw ()
+{
+	Sprite::draw ();
+}
 
