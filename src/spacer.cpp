@@ -48,10 +48,6 @@ Game::Game ()
 	radar->x = 10;
 	radar->y = display->h-10;
 	playership = new PlayerShip (spaceship_img, spaceshiprot_img, spaceshiprot2_img, cam);
-	
-	//test = SDL_CreateTexture (display->renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 200, 200);
-	//SDL_SetTextureBlendMode (test, SDL_BLENDMODE_BLEND);
-	//circle_img = new Image (display, "res/circle.png");
 }
 
 Game::~Game ()
