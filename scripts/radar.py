@@ -1,6 +1,7 @@
+#!/usr/bin/python2
 
 import math
-import Image, ImageDraw
+from PIL import Image, ImageDraw
 
 im = Image.new ("RGBA", (256,256))
 
