@@ -123,7 +123,7 @@ void Spacer::run ()
 		}
 		// time for another frame?
 		int curtick = SDL_GetTicks ();
-		if (curtick-lasttick >= 16) {
+		if (curtick-lasttick >= FRAMELEN) {
 			lasttick = curtick;
 			
 			//

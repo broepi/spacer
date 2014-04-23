@@ -1,13 +1,12 @@
 
 #include <cmath>
-#include "spacer.h"
-#include "playership.h"
+#include "enemyship.h"
 #include "utils.h"
 #include "image.h"
 
 using namespace std;
 
-PlayerShip::PlayerShip (Image *img, Image *imgHyperspin, Image *imgHyperspinEngine, Camera *camera)
+EnemyShip::EnemyShip (Image *img, Image *imgHyperspin, Image *imgHyperspinEngine, Camera *camera)
 	: Mob (img, camera)
 {
 	this->imgHyperspin = imgHyperspin;
@@ -18,7 +17,7 @@ PlayerShip::PlayerShip (Image *img, Image *imgHyperspin, Image *imgHyperspinEngi
 	turnmode = 0;
 }
 
-void PlayerShip::advance ()
+void EnemyShip::advance ()
 {
 	if (turnmode == 1)
 		rotation -= SPIN_ACCEL;
@@ -36,7 +35,7 @@ void PlayerShip::advance ()
 	Mob::advance ();
 }
 
-void PlayerShip::draw ()
+void EnemyShip::draw ()
 {
 	double tmp = angle;
 	angle = angle - frame*11.25;
@@ -48,27 +47,27 @@ void PlayerShip::draw ()
 		imgHyperspin->draw (getScreenX (), getScreenY (), sx, sy, 0, 0, rotalpha);
 }
 
-void PlayerShip::startAccelerate ()
+void EnemyShip::startAccelerate ()
 {
 	movemode = 1;
 }
 
-void PlayerShip::startFloat ()
+void EnemyShip::startFloat ()
 {
 	movemode = 0;
 }
 
-void PlayerShip::startTurnLeft ()
+void EnemyShip::startTurnLeft ()
 {
 	turnmode = 1;
 }
 
-void PlayerShip::startTurnRight ()
+void EnemyShip::startTurnRight ()
 {
 	turnmode = 2;
 }
 
-void PlayerShip::stopTurning ()
+void EnemyShip::stopTurning ()
 {
 	turnmode = 0;
 }

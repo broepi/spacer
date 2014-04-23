@@ -4,6 +4,9 @@
 
 #include <list>
 
+#define FPS 60.0
+#define FRAMELEN (1000.0/FPS)
+
 using namespace std;
 
 class Display;

@@ -3,15 +3,11 @@ spacer
 
 a space shooter written in C++ using SDL 2
 
-Build
-=====
+Building and Running
+====================
 
 1. make
-
-Running
-=======
-
-1. ./build/spacer
+2. ./spacer
 
 Dependencies
 ============

@@ -1,6 +1,6 @@
 
-#ifndef playership_H
-#define playership_H
+#ifndef enemyship_H
+#define enemyship_H
 
 #include "mob.h"
 #include "spacer.h"
@@ -12,7 +12,7 @@ class Display;
 class Image;
 class Camera;
 
-class PlayerShip : public Mob
+class EnemyShip : public Mob
 {
 public:
 	Image *imgHyperspin, *imgHyperspinEngine;
@@ -21,7 +21,7 @@ public:
 	int movemode; // 0 = FLOATING ; 1 = ACCELERATING
 	int turnmode; // 0 = STILL ; 1 = LEFT ; 2 = RIGHT
 
-	PlayerShip (Image *img, Image *imgHyperspin, Image *imgHyperspinEngine, Camera *camera = 0);
+	EnemyShip (Image *img, Image *imgHyperspin, Image *imgHyperspinEngine, Camera *camera = 0);
 	void draw ();
 	void advance ();
 	void startAccelerate ();

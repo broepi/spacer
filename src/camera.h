@@ -5,8 +5,8 @@
 class Camera
 {
 public:
-	double x, y; // midpoint in screen space
-	int w, h;
+	double x, y; // screen midpoint in world space
+	int w, h; // screen dimensions
 
 	Camera (int w, int h);
 };
