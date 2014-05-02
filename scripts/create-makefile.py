@@ -24,33 +24,55 @@ class Module:
 	
 		return str (self)
 
-def scanDeps (fileName, found = None):
+def scanDeps (fileName, curDir = "", found = None):
 
+	fullPath = os.path.join (curDir, fileName).split ("/")
+	curDir = "/".join (fullPath [:-1])
+	fileName = fullPath [-1]
+	
 	if found is None:
 		found = []
 	
-	lines = file (srcDir+"/"+fileName).read ().split ("\n")
+	try:
+		lines = file (curDir+"/"+fileName).read ().split ("\n")
+	except IOError:
+		raise Exception ("Could not open "+curDir+"/"+fileName)
+	
 	for line in lines:
 		match = re.match ("[ \t]*#include[ \t]*\"([^\"]+)\"", line)
 		if match is not None:
 			newFileName = match.group (1)
 			if newFileName not in found:
-				found.append (srcDir+"/"+newFileName)
-				scanDeps (newFileName, found)
+				found.append (curDir+"/"+newFileName)
+				scanDeps (newFileName, curDir, found)
 	
 	return found
+
+def scanModules (subSrcDir, found = None):
+
+	searchDir = os.path.join (srcDir, subSrcDir)
+
+	if found is None:
+		found = []
+	
+	for fileName in os.listdir (searchDir):
+		subFilePath = os.path.join (subSrcDir, fileName)
+		filePath = os.path.join (searchDir, fileName)
+		if os.path.isdir (filePath):
+			scanModules (subFilePath, found)
+		elif subFilePath.endswith (".cpp"):
+			modName = subFilePath [:-4]
+			modDeps = scanDeps (filePath)
+			module = Module (modName, modDeps)
+			found.append (module)
+	
+	return found
+			
 
 execfile ("Project")
 
 CPP = "g++"
-modules = []
-
-for fileName in os.listdir (srcDir):
-	if fileName.endswith (".cpp"):
-		modName = fileName[:-4]
-		modDeps = scanDeps (fileName)
-		module = Module (modName, modDeps)
-		modules.append (module)
+modules = scanModules ("")
 
 target = buildDir+"/"+projectName
 
@@ -61,7 +83,8 @@ outf.write (
 all : """+target+"""
 rebuild : clean all
 clean :
-	-rm """+buildDir+"""/*
+	-rm -R """+buildDir+"""/*.*
+	-rm -R """+buildDir+"""/*/*.*	
 """)
 
 outf.write (target+" : "+" ".join ([a.objPath for a in modules])+"\n")
@@ -72,9 +95,9 @@ outf.write (
 )
 
 for module in modules:
-	outf.write (module.objPath+" : "+module.srcPath+" "+" ".join (module.depFiles)+"\n")
+	outf.write (module.objPath+" : "+buildDir+"/ "+module.srcPath+" "+" ".join (module.depFiles)+"\n")
 	outf.write (
-		"\t"+CPP+" -o "+module.objPath+" -c "+module.srcPath+" -Wno-write-strings\n"
+		"\t"+CPP+" -o "+module.objPath+" -c "+module.srcPath+" "+extraGppFlags+" -Wno-write-strings\n"
 	)
 
 outf.close ()

@@ -1,6 +1,6 @@
 
 #include "radar.h"
-#include "image.h"
+#include "framework/image.h"
 
 Radar::Radar (Image *img)
 	: Sprite (img)

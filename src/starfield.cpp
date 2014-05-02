@@ -3,9 +3,9 @@
 #include <cmath>
 #include <iostream>
 #include "starfield.h"
-#include "display.h"
-#include "camera.h"
-#include "utils.h"
+#include "framework/display.h"
+#include "framework/camera.h"
+#include "framework/utils.h"
 
 using namespace std;
 

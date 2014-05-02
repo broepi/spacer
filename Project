@@ -1,4 +1,4 @@
 
 projectName = "spacer"
 libs = [ "SDL2", "SDL2_image", "SDL2_ttf" ]
-
+extraGppFlags = "$(shell freetype-config  --cflags)"

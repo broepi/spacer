@@ -2,8 +2,8 @@
 #include <cmath>
 #include "spacer.h"
 #include "playership.h"
-#include "utils.h"
-#include "image.h"
+#include "framework/utils.h"
+#include "framework/image.h"
 
 using namespace std;
 

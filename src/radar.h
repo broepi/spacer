@@ -2,7 +2,7 @@
 #ifndef RADAR_H
 #define RADAR_H
 
-#include "sprite.h"
+#include "framework/sprite.h"
 
 class Image;
 

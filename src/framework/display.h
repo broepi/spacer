@@ -3,19 +3,20 @@
 #define display_H
 
 #include <SDL2/SDL.h>
+#include "vector2d.h"
 
 class Display
 {
 public:
-	int w, h;
+	Vector2D dim;
 	SDL_Window *window;
 	SDL_Renderer *renderer;
 
-	Display ();
+	Display (char *wndName = "Hello World!", Vector2D dim = Vector2D (800, 600));
 	~Display ();
 	void clear ();
 	void present ();
-	void resize (int w, int h);
+	void resize (Vector2D dim);
 };
 
 #endif

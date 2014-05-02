@@ -1,5 +1,7 @@
 #!/usr/bin/python2
 
+import os
+import os.path
 import sys
 
 srcDir = "src"
@@ -7,31 +9,37 @@ buildDir = "build"
 
 # check arguments
 if len(sys.argv) != 3:
-	print "usage: script <classname> <superclass>"
+	print "usage: script [<dir>/]<classname> [<dir>/]<superclass>"
 	sys.exit (-1)
 
-classname, supername = sys.argv[1:]
+classPath, superPath = sys.argv[1:]
 
-lowername = classname.lower ()
-uppername = classname.upper ()
-cpath = srcDir+"/"+lowername+".cpp"
-hpath = srcDir+"/"+lowername+".h"
-incpath = lowername+".h"
-guardname = uppername+"_H"
+classPath = classPath.split ("/")
+className = classPath [-1]
+classNameL = className.lower ()
+classNameU = className.upper ()
+cPath = "/".join ([srcDir]+classPath[:-1])+"/"+classNameL+".cpp"
+hPath = "/".join ([srcDir]+classPath[:-1])+"/"+classNameL+".h"
+include = classNameL+".h"
+guardName = classNameU+"_H"
 
-superlower = supername.lower ()
-superinc = superlower+".h"
+superPath = superPath.split ("/")
+superName = superPath [-1]
+superNameL = superName.lower ()
+includeSuper = "/".join (superPath[:-1]+[superNameL])+".h"
 
-fs = open (hpath, "w")
+# create source file
+
+fs = open (hPath, "w")
 fs.write ("""
-#ifndef """+guardname+"""
-#define """+guardname+"""
-"""+("\n#include \""+superinc+"\"\n" if supername!="" else "")+"""
-class """+classname+(" : public "+supername if supername!="" else "")+"""
+#ifndef """+guardName+"""
+#define """+guardName+"""
+"""+("\n#include \""+includeSuper+"\"\n" if superName!="" else "")+"""
+class """+className+(" : public "+superName if superName!="" else "")+"""
 {
 public:
-	"""+classname+""" ();
-	~"""+classname+""" ();
+	"""+className+""" ();
+	~"""+className+""" ();
 };
 
 #endif
@@ -39,17 +47,20 @@ public:
 """)
 fs.close ()
 
-fs = open (cpath, "w")
-fs.write ("""
-#include \""""+incpath+"""\"
+# create header file
 
-"""+classname+"::"+classname+""" ()
+fs = open (cPath, "w")
+fs.write ("""
+#include \""""+include+"""\"
+
+"""+className+"::"+className+""" ()
 {
 }
 
-"""+classname+"::~"+classname+""" ()
+"""+className+"::~"+className+""" ()
 {
 }
 
 """)
 fs.close ()
+

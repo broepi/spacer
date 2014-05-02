@@ -2,7 +2,7 @@
 #ifndef starfield_H
 #define starfield_H
 
-#include "drawable.h"
+#include "framework/drawable.h"
 
 class Display;
 class Camera;

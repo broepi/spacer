@@ -10,5 +10,8 @@ double degtorad (double d);
 double sind (double d);
 double cosd (double d);
 
+unsigned int getchUtf8 (unsigned char **strptr);
+int power2Expanded (int input);
+
 #endif
 

@@ -2,7 +2,7 @@
 #ifndef cloud_H
 #define cloud_H
 
-#include "mob.h"
+#include "framework/mob.h"
 
 class Cloud : public Mob
 {

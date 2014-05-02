@@ -2,7 +2,7 @@
 #ifndef enemyship_H
 #define enemyship_H
 
-#include "mob.h"
+#include "framework/mob.h"
 #include "spacer.h"
 
 // spin acceleration
