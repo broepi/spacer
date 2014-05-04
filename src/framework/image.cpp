@@ -12,8 +12,7 @@ Image::Image (Display *display, char *filename, int cols, int rows)
 		SDL_SetTextureBlendMode (tex, SDL_BLENDMODE_BLEND);
 		int w,h;
 		SDL_QueryTexture (tex, 0, 0, &w, &h);
-		dim.x = w;
-		dim.y = h;
+		dim = Vector2D (w, h);
 	}
 	frameDim.x = dim.x / cols;
 	frameDim.y = dim.y / rows;
@@ -23,8 +22,7 @@ Image::Image (Display *display, SDL_Surface *surf)
 	: display (display), cols (1), rows (1)
 {
 	tex = SDL_CreateTextureFromSurface (display->renderer, surf);
-	frameDim.x = dim.x = surf->w;
-	frameDim.y = dim.y = surf->h;
+	frameDim = dim = Vector2D (surf->w, surf->h);
 }
 
 Image::~Image ()

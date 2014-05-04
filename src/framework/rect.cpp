@@ -20,3 +20,13 @@ Rect::~Rect ()
 {
 }
 
+Vector2D Rect::pos ()
+{
+	return Vector2D (x, y);
+}
+
+Vector2D Rect::dim ()
+{
+	return Vector2D (w, h);
+}
+

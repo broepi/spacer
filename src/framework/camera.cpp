@@ -12,9 +12,6 @@ Camera::~Camera ()
 
 Vector2D Camera::worldToScreen (Vector2D v)
 {
-	return Vector2D (
-		v.x - center.x + screen.w/2 + screen.x,
-		v.y - center.y + screen.h/2 + screen.y
-	);
+	return v - center + screen.dim ()/2 + screen.pos ();
 }
 

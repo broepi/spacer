@@ -1,4 +1,5 @@
 
+#include <cstdlib>
 #include <ctime>
 #include <iostream>
 #include <SDL2/SDL.h>
@@ -9,9 +10,10 @@
 
 using namespace std;
 
-Game::Game (char *gameName, int dispW, int dispH)
+Game::Game (char *gameName, Vector2D dispDim)
+	: running (false), curStage (0), fpsMeasured (0), frameLenMeasured (0)
 {
-	running = false;
+	setFps (60);
 	
 	srand (time(0));
 	
@@ -30,7 +32,7 @@ Game::Game (char *gameName, int dispW, int dispH)
 		exit (-1);
 	}
 	
-	display = new Display (gameName, dispW, dispH);
+	display = new Display (gameName, dispDim);
 }
 
 Game::~Game ()
@@ -40,5 +42,50 @@ Game::~Game ()
 	IMG_Quit ();
 	TTF_Quit ();
 	SDL_Quit ();
+}
+
+void Game::run ()
+{
+	Uint64 perfFreq = SDL_GetPerformanceFrequency ();
+	Uint64 frameStart, now, frameLen;
+	SDL_Event event;
+	
+	running = true;
+
+	while (running) {
+	
+		frameStart = SDL_GetPerformanceCounter ();
+
+		while (SDL_PollEvent (&event) == 1) {
+			switch (event.type) {
+			case SDL_QUIT:
+				running = false;
+				break;
+			}
+		}
+		
+		if (curStage) {
+			curStage->update ();
+			display->clear ();
+			curStage->draw ();
+			display->present ();
+		}
+
+		now = SDL_GetPerformanceCounter ();
+		frameLen = (now - frameStart) / perfFreq;
+
+		SDL_Delay ( frameLenTarget - frameLen );
+		
+		now = SDL_GetPerformanceCounter ();
+		frameLenMeasured = (now - frameStart) / perfFreq;
+		fpsMeasured = 1000 / frameLenMeasured;
+		cout << fpsMeasured << endl;
+	}
+}
+
+void Game::setFps (double fps)
+{
+	fpsTarget = fps;
+	frameLenTarget = 1000 / fpsTarget;
 }
 

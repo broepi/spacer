@@ -14,7 +14,6 @@ void Mob::advance ()
 		lastAdvance = now;
 	Uint64 timeDeltaTicks = now - lastAdvance;
 	double timeDelta = (double)timeDeltaTicks / (double)perfFreq;
-	pos.x += vel.x * timeDelta;
-	pos.y += vel.y * timeDelta;
+	pos += vel * timeDelta;
 }
 

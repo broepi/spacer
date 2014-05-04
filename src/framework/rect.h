@@ -13,6 +13,8 @@ public:
 	Rect (Vector2D pos = Vector2D (0, 0), Vector2D dim = Vector2D (0, 0));
 	Rect (const Rect& other);
 	~Rect ();
+	Vector2D pos ();
+	Vector2D dim (); 
 };
 
 #endif

@@ -41,7 +41,6 @@ void Display::present ()
 
 void Display::resize (Vector2D dim)
 {
-	this->dim.x = dim.x;
-	this->dim.y = dim.y;
+	this->dim += dim;
 }
 
