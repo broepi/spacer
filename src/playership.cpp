@@ -1,6 +1,5 @@
 
 #include <iostream>
-//#include "bpgw/utils.h"
 #include "playership.h"
 #include "cloud.h"
 
@@ -38,15 +37,19 @@ void PlayerShip::update (double timeDelta)
 	dir = modulo (dir, 360);
 	frame = modulo ( floor (dir * 32 / 360), 32);
 	angle = dir - frame * 360.0 / 32.0;
+	frame += (accelerating ? 32 : 0);
+	
 	// moving
 	acc = accelerating ? Vector2D (sind (dir)*64, -cosd (dir)*64) : Vector2D (0,0);
+	
 	// base sprite movment
 	Sprite::update (timeDelta);
+	
 	// transfer ship position to camera
 	cam->pos = pos;
 	
+	// eventually emit new cloud
 	if (accelerating) {
-		frame += 32;
 		if (timeNextCloud <= 0) {
 			timeNextCloud += 1.0/60;
 			Cloud *newCloud = new Cloud (game, cam);
@@ -75,7 +78,7 @@ void PlayerShip::onKeyDown (SDL_KeyboardEvent event)
 		rotAcc = +360;
 		break;
 	case SDLK_UP:
-		accelerating = true;
+		startAccelerating ();
 		break;
 	}
 }
@@ -88,7 +91,7 @@ void PlayerShip::onKeyUp (SDL_KeyboardEvent event)
 		rotAcc = 0;
 		break;
 	case SDLK_UP:
-		accelerating = false;
+		stopAccelerating ();
 		break;
 	}
 }

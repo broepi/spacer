@@ -14,4 +14,4 @@ Dependencies
 
 * SDL 2.0
 * SDL_image 2.0
-* SDL_ttf 2.0
+* FreeType
