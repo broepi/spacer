@@ -1,34 +1,28 @@
 
-#ifndef playership_H
-#define playership_H
+#ifndef PLAYERSHIP_H
+#define PLAYERSHIP_H
 
-#include "framework/mob.h"
-#include "spacer.h"
+#include "bpgw/bpgw.h"
 
-// spin acceleration
-#define SPIN_ACCEL (10.0 / FPS)
-
-class Display;
-class Image;
-class Camera;
-
-class PlayerShip : public Mob
+class PlayerShip : public Sprite, public EventHandler
 {
 public:
-	Image *imgHyperspin, *imgHyperspinEngine;
-	double rotalpha;
-	double rotation;
-	int movemode; // 0 = FLOATING ; 1 = ACCELERATING
-	int turnmode; // 0 = STILL ; 1 = LEFT ; 2 = RIGHT
-
-	PlayerShip (Image *img, Image *imgHyperspin, Image *imgHyperspinEngine, Camera *camera = 0);
-	void draw ();
-	void advance ();
-	void startAccelerate ();
-	void startFloat ();
-	void startTurnLeft ();
-	void startTurnRight ();
-	void stopTurning ();
+	bool accelerating;
+	double dir;
+	double rotVel;
+	double rotAcc;
+	double timeNextCloud;
+	Texture *imgHyperspin[2];
+	Sprite *hyperspin;
+	
+	PlayerShip (Game *game, Camera2D *cam);
+	~PlayerShip ();
+	void update (double timeDelta);
+	void onKeyDown (SDL_KeyboardEvent event);
+	void onKeyUp (SDL_KeyboardEvent event);
+	void startAccelerating ();
+	void stopAccelerating ();
 };
 
 #endif
+

@@ -1,4 +1,5 @@
 
 projectName = "spacer"
-libs = [ "SDL2", "SDL2_image", "SDL2_ttf" ]
-extraGppFlags = "$(shell freetype-config  --cflags)"
+libs = [ "SDL2", "SDL2_image", "GL"]
+extraGppOpts = "-Wno-write-strings $(shell freetype-config --cflags)"
+extraLinkerOpts = "$(shell freetype-config --libs)"

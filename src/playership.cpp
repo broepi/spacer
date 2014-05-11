@@ -1,75 +1,110 @@
 
-#include <cmath>
-#include "spacer.h"
+#include <iostream>
+//#include "bpgw/utils.h"
 #include "playership.h"
-#include "framework/utils.h"
-#include "framework/image.h"
+#include "cloud.h"
 
 using namespace std;
 
-PlayerShip::PlayerShip (Image *img, Image *imgHyperspin, Image *imgHyperspinEngine, Camera *camera)
-	: Mob (img, camera)
+PlayerShip::PlayerShip (Game *game, Camera2D *cam)
+	: Sprite (game, "playership.png", cam), accelerating (false), dir (0), rotVel (0), rotAcc (0)
 {
-	this->imgHyperspin = imgHyperspin;
-	this->imgHyperspinEngine = imgHyperspinEngine;
-	rotalpha = 0.0;
-	rotation = 0.0;
-	movemode = 0;
-	turnmode = 0;
+	layer = 1;
+	imgHyperspin[0] = game->texMan->getTexture ("playership-hyperspin.png");
+	imgHyperspin[1] = game->texMan->getTexture ("playership-hyperspin-engine.png");
+
+	center = Vector2D (0.5, 0.5);
+	
+	game->eventMan->registerHandler (SDL_KEYDOWN, this);
+	game->eventMan->registerHandler (SDL_KEYUP, this);
+	
+	hyperspin = new Sprite (game, imgHyperspin[0], cam);
+	hyperspin->center = center;
 }
 
-void PlayerShip::advance ()
+PlayerShip::~PlayerShip ()
 {
-	if (turnmode == 1)
-		rotation -= SPIN_ACCEL;
-	else if (turnmode == 2)
-		rotation += SPIN_ACCEL;
-	angle += rotation;
-	frame = modulo ( floor (angle / 360 * 32), 32);
-	if (movemode == 1) {
+	delete hyperspin;
+	
+	game->eventMan->unregisterHandler (SDL_KEYDOWN, this);
+	game->eventMan->unregisterHandler (SDL_KEYUP, this);
+}
+
+void PlayerShip::update (double timeDelta)
+{
+	// rotation
+	rotVel += rotAcc * timeDelta;
+	dir += rotVel * timeDelta;
+	dir = modulo (dir, 360);
+	frame = modulo ( floor (dir * 32 / 360), 32);
+	angle = dir - frame * 360.0 / 32.0;
+	// moving
+	acc = accelerating ? Vector2D (sind (dir)*64, -cosd (dir)*64) : Vector2D (0,0);
+	// base sprite movment
+	Sprite::update (timeDelta);
+	// transfer ship position to camera
+	cam->pos = pos;
+	
+	if (accelerating) {
 		frame += 32;
-		vx += sind (angle) * 0.1;
-		vy += -cosd (angle) * 0.1;
+		if (timeNextCloud <= 0) {
+			timeNextCloud += 1.0/60;
+			Cloud *newCloud = new Cloud (game, cam);
+			newCloud->pos = pos + Vector2D (-sind (dir)*20, cosd (dir)*20);
+			newCloud->vel = vel + Vector2D (-sind (dir)*180, cosd (dir)*180);
+		}
+		else {
+			timeNextCloud -= timeDelta;
+		}
 	}
-	alpha = 1.0 - fmax (0.0, fmin (0.75, (abs(rotation)-20) / 40));
-	rotalpha = 1.0 - alpha;
-	Mob::advance ();
+	
+	alpha = fmin (1, fmax (0.25, 1.0 - fabs (rotVel) / (360*4) + 1));
+
+	hyperspin->alpha = 1-alpha;
+	hyperspin->pos = pos;
+	hyperspin->tex = imgHyperspin [accelerating ? 1 : 0];
 }
 
-void PlayerShip::draw ()
+void PlayerShip::onKeyDown (SDL_KeyboardEvent event)
 {
-	double tmp = angle;
-	angle = angle - frame*11.25;
-	Mob::draw ();
-	angle = tmp;
-	if (movemode == 1)
-		imgHyperspinEngine->draw (getScreenX (), getScreenY (), sx, sy, 0, 0, rotalpha);
-	else
-		imgHyperspin->draw (getScreenX (), getScreenY (), sx, sy, 0, 0, rotalpha);
+	switch (event.keysym.sym) {
+	case SDLK_LEFT:
+		rotAcc = -360;
+		break;
+	case SDLK_RIGHT:
+		rotAcc = +360;
+		break;
+	case SDLK_UP:
+		accelerating = true;
+		break;
+	}
 }
 
-void PlayerShip::startAccelerate ()
+void PlayerShip::onKeyUp (SDL_KeyboardEvent event)
 {
-	movemode = 1;
+	switch (event.keysym.sym) {
+	case SDLK_LEFT:
+	case SDLK_RIGHT:
+		rotAcc = 0;
+		break;
+	case SDLK_UP:
+		accelerating = false;
+		break;
+	}
 }
 
-void PlayerShip::startFloat ()
+void PlayerShip::startAccelerating ()
 {
-	movemode = 0;
+	if (!accelerating) {
+		timeNextCloud = 0;
+		accelerating = true;
+	}
 }
 
-void PlayerShip::startTurnLeft ()
+void PlayerShip::stopAccelerating ()
 {
-	turnmode = 1;
+	timeNextCloud = 0;
+	accelerating = false;
 }
 
-void PlayerShip::startTurnRight ()
-{
-	turnmode = 2;
-}
-
-void PlayerShip::stopTurning ()
-{
-	turnmode = 0;
-}
 

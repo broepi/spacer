@@ -1,0 +1,6 @@
+[submodule "proto"]
+	path = proto
+	url = git@github.com:broepi/proto.git
+[submodule "src/bpgw"]
+	path = src/bpgw
+	url = git@github.com:broepi/bpgw.git

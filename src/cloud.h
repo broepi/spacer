@@ -1,14 +1,15 @@
 
-#ifndef cloud_H
-#define cloud_H
+#ifndef CLOUD_H
+#define CLOUD_H
 
-#include "framework/mob.h"
+#include "bpgw/sprite.h"
 
-class Cloud : public Mob
+class Cloud : public Sprite
 {
 public:
-	Cloud (Image *img, Camera *cam = 0);
-	void advance ();
+	Cloud (Game *game, Camera2D *cam);
+	~Cloud ();
+	void update (double timeDelta);
 };
 
 #endif

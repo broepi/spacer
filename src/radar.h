@@ -2,18 +2,13 @@
 #ifndef RADAR_H
 #define RADAR_H
 
-#include "framework/sprite.h"
-
-class Image;
+#include "bpgw/sprite.h"
 
 class Radar : public Sprite
 {
 public:
-	Image *screen;
-	
-	Radar (Image *img);
+	Radar (Game *game);
 	~Radar ();
-	void draw ();
 };
 
 #endif

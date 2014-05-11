@@ -1,19 +1,27 @@
 
+#include <iostream>
 #include "cloud.h"
 
-Cloud::Cloud (Image *img, Camera *cam) :
-	Mob (img, cam)
+Cloud::Cloud (Game *game, Camera2D *cam)
+	: Sprite (game, "cloud.png", cam)
 {
-	sx = sy = 1.0/8.0;
-	cx = cy = 0.5;
+	center = Vector2D (0.5, 0.5);
+	scale = Vector2D (0.125);
 }
 
-void Cloud::advance ()
+void Cloud::update (double timeDelta)
 {
-	alpha *= 0.975;
-	if (alpha < 0.01) alpha = 0;
-	sx += 0.01;
-	sy += 0.01;
+	scale += Vector2D (1)*timeDelta;
+	alpha = 1 / (scale.x*scale.y);
+	if (alpha < 0.01) {
+		delete this;
+		return;
+	}
 	
-	Mob::advance ();
+	Sprite::update (timeDelta);
 }
+
+Cloud::~Cloud ()
+{
+}
+

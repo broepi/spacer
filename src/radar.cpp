@@ -1,19 +1,16 @@
 
 #include "radar.h"
-#include "framework/image.h"
 
-Radar::Radar (Image *img)
-	: Sprite (img)
+Radar::Radar (Game *game)
+	: Sprite (game, "radar.png")
 {
-	screen = new Image (img->display, img->fw, img->fw);
+	layer = 2;
+	align.y = 1;
+	center.y = 1;
+	pos = Vector2D (10,-10);
 }
 
 Radar::~Radar ()
 {
-}
-
-void Radar::draw ()
-{
-	Sprite::draw ();
 }
 

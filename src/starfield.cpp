@@ -1,74 +1,62 @@
 
+#include <iostream>
 #include <cstdlib>
 #include <cmath>
-#include <iostream>
 #include "starfield.h"
-#include "framework/display.h"
-#include "framework/camera.h"
-#include "framework/utils.h"
 
 using namespace std;
 
-Starfield::Starfield (Display *display, Camera *cam, int w, int h, int numStars)
+Starfield::Starfield (Game *game, Camera2D *cam, Vector2D dim, int numStars)
+	: game (game), cam (cam), dim (dim), numStars (numStars)
 {
-	this->display = display;
-	this->cam = cam;
-	this->w = w;
-	this->h = h;
-	this->numStars = numStars;
+	layer = -1;
+	game->drawMan->registerDrawable (this);
+	
 	stars = new Star [numStars];
 	for (int i=0; i<numStars; i++) {
-		stars [i].x = rand() % w;
-		stars [i].y = rand() % h;
-		stars [i].b = rand() / float(RAND_MAX);
+		stars [i].pos.x = rand() % (int)dim.x;
+		stars [i].pos.y = rand() % (int)dim.y;
+		stars [i].d = rand() / float(RAND_MAX);
 	}
+}
+
+Starfield::~Starfield ()
+{
+	delete[] stars;
+	game->drawMan->unregisterDrawable (this);
 }
 
 void Starfield::draw ()
 {
+	//if (cam) cam->push ();
 	for (int i=0; i<numStars; i++) {
-		double b = stars[i].b;
-		if (cam) {
-			double x = modulo (-cam->x * b * 0.1 + stars[i].x, w) + cam->w / 2;
-			double y = modulo (-cam->y * b * 0.1 + stars[i].y, h) + cam->h / 2;
-			drawStar (floor (x), floor (y), b);
-			if (x-w >= 0) {
-				drawStar (x-w, y, b);
-				if (y-h >= 0) {
-					drawStar (x-w, y-h, b);
-				}
-			}
-			if (y-h >= 0) {
-				drawStar (x, y-h, b);
-			}
-		}
-		else {
-			double x = stars[i].x;
-			double y = stars[i].y;
-			drawStar (floor (x), floor (y), b);
-			if (x+w < display->w) {
-				drawStar (x+w, y, b);
-				if (y+h < display->h) {
-					drawStar (x+w, y+h, b);
-				}
-			}
-			if (y+h < display->h) {
-				drawStar (x, y+h, b);
+		double d = stars [i].d;
+		Vector2D final = stars [i].pos;
+		// move star to the camera viewport center
+		final += Vector2D (
+			cam->center.x * cam->getDim ().x,
+			cam->center.y * cam->getDim ().y);
+		// move star by camera shift
+		final -= cam->pos * d * 0.1;
+		// bound star to rect (0,0,starfield.w,starfield.h) in screen space
+		final.x = modulo (final.x, dim.x);
+		final.y = modulo (final.y, dim.y);
+		// expand star to the full camera dimension
+		Vector2D camDim = cam->getDim ();
+		for (double xEx = final.x; xEx <= camDim.x; xEx += dim.x) {
+			for (double yEx = final.y; yEx <= camDim.y; yEx += dim.y) {
+				drawScreenStar (Vector2D (xEx, yEx), d);
 			}
 		}
 	}
 }
 
-void Starfield::drawStar (int x, int y, double b)
+void Starfield::drawScreenStar (Vector2D pos, double bri)
 {
-	int ib = b * 255;
-	SDL_SetRenderDrawColor (display->renderer, ib, ib, ib, 255);
-	if (b > 0.95) {
-		SDL_Rect r = {x, y, 2, 2};
-		SDL_RenderFillRect (display->renderer, &r);
-	}
-	else {
-		SDL_RenderDrawPoint (display->renderer, x, y);
-	}
+	game->display->drawPoint (
+		pos,
+		Color (1.0, 1.0, 1.0, bri),
+		( bri > 0.95 ? 2 : 1)
+	);
 }
 

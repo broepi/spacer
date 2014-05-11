@@ -1,11 +1,8 @@
 
-#ifndef starfield_H
-#define starfield_H
+#ifndef STARFIELD_H
+#define STARFIELD_H
 
-#include "framework/drawable.h"
-
-class Display;
-class Camera;
+#include "bpgw/bpgw.h"
 
 class Starfield : public Drawable
 {
@@ -13,19 +10,21 @@ public:
 	class Star
 	{
 	public:
-		int x, y;
-		double b;
+		Vector2D pos;
+		double d; // depth in range 0.0..1.0
 	};
-
-	int w, h;
+	
+	Game *game;
+	Camera2D *cam;
+	Vector2D dim;
 	int numStars;
-	Camera *cam;
 	Star *stars;
-	Display *display;
-
-	Starfield (Display *display, Camera *cam = 0, int w = 1024, int h = 1024, int numStars = 1024);
+	
+	Starfield (Game *game, Camera2D *cam = 0, Vector2D dim = Vector2D (1024, 1024),
+		int numStars = 1024);
+	~Starfield ();
 	void draw ();
-	void drawStar (int x, int y, double b);
+	void drawScreenStar (Vector2D pos, double bri);
 };
 
 #endif
