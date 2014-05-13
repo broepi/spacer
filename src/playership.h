@@ -2,6 +2,8 @@
 #ifndef PLAYERSHIP_H
 #define PLAYERSHIP_H
 
+#define ACCEL 128
+
 #include "bpgw/bpgw.h"
 
 class PlayerShip : public Sprite, public EventHandler

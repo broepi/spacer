@@ -40,6 +40,7 @@ void Spacer::update (double timeDelta)
 int main (int argc, char *argv[])
 {
 	Spacer *spacer = new Spacer ();
+	spacer->synchronized = spacer->powerSaving = true;
 	spacer->run ();
 	delete spacer;
 	return 0;

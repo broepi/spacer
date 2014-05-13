@@ -40,7 +40,7 @@ void PlayerShip::update (double timeDelta)
 	frame += (accelerating ? 32 : 0);
 	
 	// moving
-	acc = accelerating ? Vector2D (sind (dir)*64, -cosd (dir)*64) : Vector2D (0,0);
+	acc = accelerating ? Vector2D (sind (dir)*ACCEL, -cosd (dir)*ACCEL) : Vector2D (0,0);
 	
 	// base sprite movment
 	Sprite::update (timeDelta);
@@ -51,14 +51,12 @@ void PlayerShip::update (double timeDelta)
 	// eventually emit new cloud
 	if (accelerating) {
 		if (timeNextCloud <= 0) {
-			timeNextCloud += 1.0/60;
+			timeNextCloud += 1.0/50;
 			Cloud *newCloud = new Cloud (game, cam);
 			newCloud->pos = pos + Vector2D (-sind (dir)*20, cosd (dir)*20);
 			newCloud->vel = vel + Vector2D (-sind (dir)*180, cosd (dir)*180);
 		}
-		else {
-			timeNextCloud -= timeDelta;
-		}
+		timeNextCloud -= timeDelta;
 	}
 	
 	alpha = fmin (1, fmax (0.25, 1.0 - fabs (rotVel) / (360*4) + 1));

@@ -13,7 +13,7 @@ void Cloud::update (double timeDelta)
 {
 	scale += Vector2D (1)*timeDelta;
 	alpha = 1 / (scale.x*scale.y);
-	if (alpha < 0.01) {
+	if (alpha < 0.005) {
 		delete this;
 		return;
 	}
