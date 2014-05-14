@@ -17,10 +17,12 @@ public:
 	Starfield *starfield;
 	PlayerShip *playerShip;
 	Sprite *lblPosition;
+	double nextEnemySpawnTime;
 	
 	Spacer ();
 	~Spacer ();
 	void update (double timeDelta);
+	void spawnEnemy ();
 };
 
 #endif

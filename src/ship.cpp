@@ -28,6 +28,7 @@ Ship::Ship (Game *game, char *spriteSetName, Camera2D *cam)
 	
 	hyperspin = new Sprite (game, texHyperspin[0], cam);
 	hyperspin->center = center;
+	hyperspin->alpha = 0;
 }
 
 Ship::~Ship ()
@@ -51,9 +52,6 @@ void Ship::update (double timeDelta)
 	
 	// base sprite movment
 	Sprite::update (timeDelta);
-	
-	// transfer ship position to camera
-	cam->pos = pos;
 	
 	// the hyperspin animation
 	alpha = fmin (1, fmax (0.25, 1.0 - fabs (rotVel) / (360*4) + 1));

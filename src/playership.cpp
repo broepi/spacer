@@ -20,6 +20,12 @@ PlayerShip::~PlayerShip ()
 
 void PlayerShip::update (double timeDelta)
 {
+	// base class update
+	Ship::update (timeDelta);
+	
+	// transfer ship position to camera
+	cam->pos = pos;
+	
 	// eventually emit new cloud
 	if (accelerating) {
 		if (timeNextCloud <= 0) {
@@ -30,9 +36,6 @@ void PlayerShip::update (double timeDelta)
 		}
 		timeNextCloud -= timeDelta;
 	}
-	
-	// base class update
-	Ship::update (timeDelta);
 }
 
 void PlayerShip::onKeyDown (SDL_KeyboardEvent event)
